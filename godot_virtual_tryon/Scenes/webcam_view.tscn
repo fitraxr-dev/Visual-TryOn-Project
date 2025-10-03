@@ -1,0 +1,73 @@
+[gd_scene load_steps=2 format=3 uid="uid://7sf0umcyce5m"]
+
+[ext_resource type="Script" uid="uid://bqogwcahm1brl" path="res://Scripts/WebcamViewController.gd" id="1_3k8qf"]
+
+[node name="WebcamView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_3k8qf")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer/TitleContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Virtual Try-On - Webcam Stream"
+horizontal_alignment = 1
+
+[node name="StatusContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/StatusContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Not connected"
+horizontal_alignment = 1
+
+[node name="VideoContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VideoDisplay" type="TextureRect" parent="VBoxContainer/VideoContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch_mode = 4
+
+[node name="ControlsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="ConnectButton" type="Button" parent="VBoxContainer/ControlsContainer"]
+layout_mode = 2
+text = "Connect to Webcam Server"
+
+[node name="DisconnectButton" type="Button" parent="VBoxContainer/ControlsContainer"]
+visible = false
+layout_mode = 2
+text = "Disconnect"
+
+[node name="InfoContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="VBoxContainer/InfoContainer"]
+layout_mode = 2
+text = "Status: Disconnected"
+vertical_alignment = 1
