@@ -15,7 +15,8 @@ from config import (
 )
 from utils import (
     setup_logging, create_metadata_message, 
-    parse_client_message, validate_resolution, validate_fps
+    parse_client_message, validate_resolution, validate_fps,
+    create_contour_info_message
 )
 
 class WebcamWebSocketServer:
@@ -126,6 +127,30 @@ class WebcamWebSocketServer:
             if isinstance(quality, int):
                 self.camera.set_jpeg_quality(quality)
                 self.logger.info(f"JPEG quality changed by {client_addr}: {quality}")
+        
+        # Handle skin detection toggle
+        if "skin_detection" in config:
+            enable = config["skin_detection"]
+            if isinstance(enable, bool):
+                self.camera.toggle_skin_detection(enable)
+                self.logger.info(f"Skin detection {'enabled' if enable else 'disabled'} by {client_addr}")
+        
+        # Handle skin range calibration
+        if "skin_range" in config:
+            skin_range = config["skin_range"]
+            if "lower" in skin_range and "upper" in skin_range:
+                lower = skin_range["lower"]
+                upper = skin_range["upper"]
+                if isinstance(lower, list) and isinstance(upper, list):
+                    self.camera.update_skin_range(lower, upper)
+                    self.logger.info(f"Skin range calibrated by {client_addr}")
+        
+        # Handle minimum contour area
+        if "min_contour_area" in config:
+            area = config["min_contour_area"]
+            if isinstance(area, int):
+                self.camera.set_min_contour_area(area)
+                self.logger.info(f"Minimum contour area set to {area} by {client_addr}")
     
     async def client_handler(self, websocket: Any):
         """

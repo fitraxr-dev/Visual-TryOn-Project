@@ -50,6 +50,22 @@ def create_metadata_message(width: int, height: int, fps: int) -> str:
     }
     return json.dumps(metadata)
 
+def create_contour_info_message(contour_info: Dict[str, Any]) -> str:
+    """
+    Buat pesan informasi kontur dalam format JSON
+    
+    Args:
+        contour_info: Dictionary berisi informasi kontur
+    
+    Returns:
+        JSON string dengan informasi kontur
+    """
+    message = {
+        "type": "contour_info",
+        "data": contour_info
+    }
+    return json.dumps(message)
+
 def parse_client_message(message: str) -> Dict[str, Any]:
     """
     Parse pesan JSON dari client

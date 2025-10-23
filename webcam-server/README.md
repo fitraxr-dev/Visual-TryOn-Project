@@ -11,6 +11,9 @@ Proyek Python untuk streaming video webcam melalui WebSocket dengan dukungan bin
 - Multi-client support dengan broadcast
 - Interface browser test untuk development
 - Arsitektur yang mudah diintegrasikan dengan Godot Engine
+- **🆕 Skin Detection / Segmentation** - Deteksi area tangan secara real-time
+- **🆕 Hand Contour Detection** - Visualisasi kontur tangan dengan overlay
+- **🆕 Real-time Hand Tracking** - Informasi posisi dan ukuran tangan
 
 ## Instalasi
 
@@ -43,22 +46,40 @@ Server akan berjalan di `ws://localhost:8765`
 2. Klik tombol "Connect to WebSocket"
 3. Video stream dari webcam akan muncul di halaman
 
+### 3. Testing Skin Detection (Standalone)
+
+```bash
+python test_skin_detection.py
+```
+
+**Controls:**
+- `q` - Quit
+- `m` - Toggle mask view
+- `s` - Save screenshot
+- `b` - Toggle bounding box
+- `c` - Toggle contour drawing
+
+Lihat [SKIN_DETECTION.md](SKIN_DETECTION.md) untuk dokumentasi lengkap fitur skin detection.
+
 ## Struktur Proyek
 
-```
+```text
 ├── server/
 │   ├── __init__.py           # Package marker
 │   ├── config.py            # Konfigurasi server
 │   ├── server.py            # WebSocket server utama
 │   ├── camera.py            # Pengelolaan webcam
+│   ├── skin_detector.py     # 🆕 Skin detection module
 │   └── utils.py             # Utility functions
 ├── clients/
 │   ├── browser_test/
 │   │   ├── index.html       # Interface test browser
 │   │   └── client.js        # JavaScript client
 │   └── readme.md           # Dokumentasi client
+├── test_skin_detection.py   # 🆕 Test script untuk skin detection
 ├── requirements.txt         # Dependencies Python
-└── README.md               # Dokumentasi utama
+├── README.md               # Dokumentasi utama
+└── SKIN_DETECTION.md       # 🆕 Dokumentasi skin detection
 ```
 
 ## Protokol Komunikasi
@@ -82,11 +103,18 @@ Server akan berjalan di `ws://localhost:8765`
 ### Pesan dari Client ke Server
 
 - JSON message untuk konfigurasi (opsional):
+
   ```json
   {
     "type": "config",
     "fps": 30,
-    "resolution": [1280, 720]
+    "resolution": [1280, 720],
+    "skin_detection": true,
+    "skin_range": {
+      "lower": [0, 40, 60],
+      "upper": [20, 150, 255]
+    },
+    "min_contour_area": 1000
   }
   ```
 
@@ -94,10 +122,22 @@ Server akan berjalan di `ws://localhost:8765`
 
 Edit `server/config.py` untuk mengubah:
 
+### Server & Camera
 - Port server
 - Resolusi video
 - FPS target
 - Kualitas JPEG encoding
+
+### Skin Detection (🆕)
+- `ENABLE_SKIN_DETECTION` - Enable/disable fitur skin detection
+- `SKIN_LOWER_HSV` - Lower bound warna kulit [H, S, V]
+- `SKIN_UPPER_HSV` - Upper bound warna kulit [H, S, V]
+- `MIN_CONTOUR_AREA` - Minimum area kontur yang valid
+- `DRAW_CONTOURS` - Tampilkan kontur di frame
+- `CONTOUR_COLOR` - Warna kontur [B, G, R]
+- `SHOW_BOUNDING_BOX` - Tampilkan bounding box
+
+Lihat [SKIN_DETECTION.md](SKIN_DETECTION.md) untuk detail lengkap konfigurasi.
 
 ## Integrasi Godot Engine
 
