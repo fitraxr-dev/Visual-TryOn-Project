@@ -9,9 +9,9 @@ import logging
 from typing import Optional, Tuple
 from config import (
     CAMERA_INDEX, DEFAULT_WIDTH, DEFAULT_HEIGHT, 
-    JPEG_QUALITY, CAMERA_LOOP_DELAY, ENABLE_SKIN_DETECTION
+    JPEG_QUALITY, CAMERA_LOOP_DELAY
 )
-from skin_detector import SkinDetector
+from head_detector import HeadDetector
 
 class Camera:
     """
@@ -34,10 +34,8 @@ class Camera:
         self.height = DEFAULT_HEIGHT
         self.jpeg_quality = JPEG_QUALITY
         
-        # Skin detection
-        self.enable_skin_detection = ENABLE_SKIN_DETECTION
-        self.skin_detector = SkinDetector() if ENABLE_SKIN_DETECTION else None
-        self.latest_contour_info = None
+        # Head detection
+        self.head_detector = HeadDetector()
         
         self.logger = logging.getLogger(__name__)
         
@@ -96,18 +94,10 @@ class Camera:
                 if frame.shape[1] != self.width or frame.shape[0] != self.height:
                     frame = cv2.resize(frame, (self.width, self.height))
                 
-                # Apply skin detection jika diaktifkan
+                # Apply head detection dan hat overlay jika diaktifkan
                 processed_frame = frame
-                if self.enable_skin_detection and self.skin_detector:
-                    processed_frame, _, contour = self.skin_detector.process_frame(frame)
-                    
-                    # Simpan informasi kontur untuk diakses nanti
-                    if contour is not None:
-                        async with self.frame_lock:
-                            self.latest_contour_info = self.skin_detector.get_contour_info(contour)
-                    else:
-                        async with self.frame_lock:
-                            self.latest_contour_info = None
+                if self.head_detector.enabled:
+                    processed_frame, _ = self.head_detector.process_frame(frame)
                 
                 # Encode ke JPEG
                 encode_params = [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality]
@@ -173,15 +163,11 @@ class Camera:
             "jpeg_quality": self.jpeg_quality,
             "camera_index": self.camera_index,
             "is_running": self.is_running,
-            "skin_detection_enabled": self.enable_skin_detection
+            "head_detection_enabled": self.head_detector.enabled
         }
         
-        # Tambahkan info kontour jika ada
-        if self.latest_contour_info:
-            info["hand_detected"] = True
-            info["hand_info"] = self.latest_contour_info
-        else:
-            info["hand_detected"] = False
+        # Tambahkan info head detector
+        info["head_detector"] = self.head_detector.get_info()
             
         return info
     
@@ -195,40 +181,57 @@ class Camera:
         async with self.frame_lock:
             return self.latest_contour_info
     
-    def toggle_skin_detection(self, enable: bool):
+    def toggle_head_detection(self, enable: bool):
         """
-        Enable/disable skin detection
+        Enable/disable head detection
         
         Args:
             enable: True untuk enable, False untuk disable
         """
-        self.enable_skin_detection = enable
-        if enable and self.skin_detector is None:
-            self.skin_detector = SkinDetector()
-        self.logger.info(f"Skin detection {'enabled' if enable else 'disabled'}")
+        self.head_detector.toggle_detection(enable)
+        self.logger.info(f"Head detection {'enabled' if enable else 'disabled'}")
     
-    def update_skin_range(self, lower_hsv: list, upper_hsv: list):
+    def set_cascade(self, cascade_type: str) -> bool:
         """
-        Update rentang warna kulit untuk kalibrasi
+        Set cascade classifier untuk head detection
         
         Args:
-            lower_hsv: Lower bound HSV [H, S, V]
-            upper_hsv: Upper bound HSV [H, S, V]
+            cascade_type: Tipe cascade (haar_biwi, lbp_biwi, opencv_default)
+            
+        Returns:
+            True jika berhasil, False jika gagal
         """
-        if self.skin_detector:
-            self.skin_detector.update_skin_range(lower_hsv, upper_hsv)
-            self.logger.info("Skin range updated")
+        return self.head_detector.set_cascade(cascade_type)
     
-    def set_min_contour_area(self, area: int):
+    def set_hat(self, hat_index: int) -> bool:
         """
-        Set minimum area untuk kontur yang valid
+        Set topi untuk hat overlay
         
         Args:
-            area: Minimum area dalam pixels
+            hat_index: Index topi (0-based)
+            
+        Returns:
+            True jika berhasil, False jika gagal
         """
-        if self.skin_detector:
-            self.skin_detector.set_min_contour_area(area)
-            self.logger.info(f"Minimum contour area set to {area}")
+        return self.head_detector.set_hat(hat_index)
+    
+    def next_hat(self) -> bool:
+        """
+        Switch ke topi berikutnya
+        
+        Returns:
+            True jika berhasil, False jika tidak ada topi
+        """
+        return self.head_detector.next_hat()
+    
+    def previous_hat(self) -> bool:
+        """
+        Switch ke topi sebelumnya
+        
+        Returns:
+            True jika berhasil, False jika tidak ada topi
+        """
+        return self.head_detector.previous_hat()
     
     async def stop(self):
         """

@@ -64,6 +64,56 @@ visible = false
 layout_mode = 2
 text = "Disconnect"
 
+[node name="HeadDetectionContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeadDetectionLabel" type="Label" parent="VBoxContainer/HeadDetectionContainer"]
+layout_mode = 2
+text = "Head Detection Controls"
+horizontal_alignment = 1
+
+[node name="HeadDetectionToggle" type="CheckButton" parent="VBoxContainer/HeadDetectionContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Enable Head Detection"
+
+[node name="CascadeContainer" type="HBoxContainer" parent="VBoxContainer/HeadDetectionContainer"]
+layout_mode = 2
+
+[node name="CascadeLabel" type="Label" parent="VBoxContainer/HeadDetectionContainer/CascadeContainer"]
+layout_mode = 2
+text = "Cascade: "
+
+[node name="CascadeOptions" type="OptionButton" parent="VBoxContainer/HeadDetectionContainer/CascadeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 3
+popup/item_0/text = "HAAR Biwi"
+popup/item_0/id = 0
+popup/item_1/text = "LBP Biwi"
+popup/item_1/id = 1
+popup/item_2/text = "OpenCV Default"
+popup/item_2/id = 2
+
+[node name="HatContainer" type="HBoxContainer" parent="VBoxContainer/HeadDetectionContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="HatPrevButton" type="Button" parent="VBoxContainer/HeadDetectionContainer/HatContainer"]
+layout_mode = 2
+text = "< Previous Hat"
+
+[node name="HatLabel" type="Label" parent="VBoxContainer/HeadDetectionContainer/HatContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hat: hat_1.png"
+horizontal_alignment = 1
+
+[node name="HatNextButton" type="Button" parent="VBoxContainer/HeadDetectionContainer/HatContainer"]
+layout_mode = 2
+text = "Next Hat >"
+
 [node name="InfoContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 

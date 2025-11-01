@@ -119,6 +119,36 @@ func send_config_message(config: Dictionary):
 	websocket_client.send_text(json_string)
 	_log("Config sent: " + json_string)
 
+func toggle_head_detection(enable: bool):
+	"""
+	Enable/disable head detection
+	"""
+	send_config_message({"head_detection": enable})
+
+func set_cascade(cascade_type: String):
+	"""
+	Set cascade classifier (haar_biwi, lbp_biwi, opencv_default)
+	"""
+	send_config_message({"cascade_type": cascade_type})
+
+func set_hat(hat_index: int):
+	"""
+	Set hat by index
+	"""
+	send_config_message({"hat_index": hat_index})
+
+func next_hat():
+	"""
+	Switch to next hat
+	"""
+	send_config_message({"next_hat": true})
+
+func previous_hat():
+	"""
+	Switch to previous hat
+	"""
+	send_config_message({"previous_hat": true})
+
 func _handle_incoming_packets():
 	"""
 	Memproses paket yang masuk dari server

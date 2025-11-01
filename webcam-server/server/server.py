@@ -15,8 +15,7 @@ from config import (
 )
 from utils import (
     setup_logging, create_metadata_message, 
-    parse_client_message, validate_resolution, validate_fps,
-    create_contour_info_message
+    parse_client_message, validate_resolution, validate_fps
 )
 
 class WebcamWebSocketServer:
@@ -93,7 +92,9 @@ class WebcamWebSocketServer:
         message_type = parsed_message.get("type")
         
         if message_type == "config":
-            await self.handle_config_message(websocket, parsed_message)
+            # Extract data from config message
+            config_data = parsed_message.get("data", {})
+            await self.handle_config_message(websocket, config_data)
         else:
             self.logger.warning(f"Unknown message type from {client_addr}: {message_type}")
     
@@ -128,29 +129,40 @@ class WebcamWebSocketServer:
                 self.camera.set_jpeg_quality(quality)
                 self.logger.info(f"JPEG quality changed by {client_addr}: {quality}")
         
-        # Handle skin detection toggle
-        if "skin_detection" in config:
-            enable = config["skin_detection"]
+        # Handle head detection toggle
+        if "head_detection" in config:
+            enable = config["head_detection"]
             if isinstance(enable, bool):
-                self.camera.toggle_skin_detection(enable)
-                self.logger.info(f"Skin detection {'enabled' if enable else 'disabled'} by {client_addr}")
+                self.camera.toggle_head_detection(enable)
+                self.logger.info(f"Head detection {'enabled' if enable else 'disabled'} by {client_addr}")
         
-        # Handle skin range calibration
-        if "skin_range" in config:
-            skin_range = config["skin_range"]
-            if "lower" in skin_range and "upper" in skin_range:
-                lower = skin_range["lower"]
-                upper = skin_range["upper"]
-                if isinstance(lower, list) and isinstance(upper, list):
-                    self.camera.update_skin_range(lower, upper)
-                    self.logger.info(f"Skin range calibrated by {client_addr}")
+        # Handle cascade change
+        if "cascade_type" in config:
+            cascade_type = config["cascade_type"]
+            if isinstance(cascade_type, str):
+                if self.camera.set_cascade(cascade_type):
+                    self.logger.info(f"Cascade changed to {cascade_type} by {client_addr}")
+                else:
+                    self.logger.warning(f"Failed to change cascade to {cascade_type} by {client_addr}")
         
-        # Handle minimum contour area
-        if "min_contour_area" in config:
-            area = config["min_contour_area"]
-            if isinstance(area, int):
-                self.camera.set_min_contour_area(area)
-                self.logger.info(f"Minimum contour area set to {area} by {client_addr}")
+        # Handle hat change
+        if "hat_index" in config:
+            hat_index = config["hat_index"]
+            if isinstance(hat_index, int):
+                if self.camera.set_hat(hat_index):
+                    self.logger.info(f"Hat changed to index {hat_index} by {client_addr}")
+                else:
+                    self.logger.warning(f"Failed to change hat to index {hat_index} by {client_addr}")
+        
+        # Handle next hat
+        if "next_hat" in config and config["next_hat"]:
+            self.camera.next_hat()
+            self.logger.info(f"Switched to next hat by {client_addr}")
+        
+        # Handle previous hat
+        if "previous_hat" in config and config["previous_hat"]:
+            self.camera.previous_hat()
+            self.logger.info(f"Switched to previous hat by {client_addr}")
     
     async def client_handler(self, websocket: Any):
         """

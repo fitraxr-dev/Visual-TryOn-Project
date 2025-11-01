@@ -2,11 +2,8 @@ extends Control
 
 """
 Controller untuk WebcamView scene
-Menampilkan video stream dari Python webcam server
+Menampilkan video stream dari Python webcam server dengan fitur head detection
 """
-
-# Preload WebcamClient
-const WebcamClient = preload("res://Scripts/WebcamClient.gd")
 
 # UI Elements
 @onready var video_display: TextureRect = $VBoxContainer/VideoContainer/VideoDisplay
@@ -15,6 +12,13 @@ const WebcamClient = preload("res://Scripts/WebcamClient.gd")
 @onready var disconnect_button: Button = $VBoxContainer/ControlsContainer/DisconnectButton
 @onready var info_label: Label = $VBoxContainer/InfoContainer/InfoLabel
 
+# Head Detection Controls - DARI SCENE!
+@onready var head_detection_toggle: CheckButton = $VBoxContainer/HeadDetectionContainer/HeadDetectionToggle
+@onready var cascade_options: OptionButton = $VBoxContainer/HeadDetectionContainer/CascadeContainer/CascadeOptions
+@onready var hat_prev_button: Button = $VBoxContainer/HeadDetectionContainer/HatContainer/HatPrevButton
+@onready var hat_next_button: Button = $VBoxContainer/HeadDetectionContainer/HatContainer/HatNextButton
+@onready var hat_info_label: Label = $VBoxContainer/HeadDetectionContainer/HatContainer/HatLabel
+
 # WebSocket client
 var webcam_client: WebcamClient
 
@@ -22,21 +26,37 @@ var webcam_client: WebcamClient
 var frame_count: int = 0
 var connection_time: float = 0.0
 
+# Head detection state
+var head_detection_enabled: bool = true  # TRUE by default!
+var current_cascade: String = "haar_biwi"
+var current_hat_index: int = 0
+
 func _ready():
 	# Initialize WebcamClient
 	webcam_client = WebcamClient.new()
 	add_child(webcam_client)
 	
-	# Connect signals
+	# Connect WebcamClient signals
 	webcam_client.connected.connect(_on_webcam_connected)
 	webcam_client.disconnected.connect(_on_webcam_disconnected)
 	webcam_client.frame_received.connect(_on_frame_received)
 	webcam_client.metadata_received.connect(_on_metadata_received)
 	webcam_client.connection_error.connect(_on_connection_error)
 	
-	# Connect UI signals
+	# Connect UI button signals
 	connect_button.pressed.connect(_on_connect_pressed)
 	disconnect_button.pressed.connect(_on_disconnect_pressed)
+	
+	# Connect Head Detection control signals
+	head_detection_toggle.toggled.connect(_on_head_detection_toggled)
+	cascade_options.item_selected.connect(_on_cascade_selected)
+	hat_prev_button.pressed.connect(_on_previous_hat_pressed)
+	hat_next_button.pressed.connect(_on_next_hat_pressed)
+	
+	# Initialize head detection UI state
+	head_detection_toggle.button_pressed = head_detection_enabled
+	cascade_options.select(0)  # Default to HAAR Biwi
+	_update_hat_label()
 	
 	# Initial UI state
 	_update_ui_state("disconnected")
@@ -156,3 +176,56 @@ func _exit_tree():
 	"""
 	if webcam_client:
 		webcam_client.disconnect_from_server()
+
+func _on_head_detection_toggled(enabled: bool):
+	"""
+	Handle head detection toggle
+	"""
+	print("======================================")
+	print("🔴 BUTTON CLICKED: Head Detection Toggle")
+	print("🔴 New state:", "ENABLED" if enabled else "DISABLED")
+	print("======================================")
+	head_detection_enabled = enabled
+	webcam_client.toggle_head_detection(enabled)
+
+func _on_cascade_selected(index: int):
+	"""
+	Handle cascade selection
+	"""
+	var cascade_types = ["haar_biwi", "lbp_biwi", "opencv_default"]
+	current_cascade = cascade_types[index]
+	print("======================================")
+	print("🔴 BUTTON CLICKED: Cascade Selection")
+	print("🔴 Selected cascade:", current_cascade)
+	print("======================================")
+	webcam_client.set_cascade(current_cascade)
+
+func _on_previous_hat_pressed():
+	"""
+	Handle previous hat button
+	"""
+	print("======================================")
+	print("🔴 BUTTON CLICKED: Previous Hat")
+	print("🔴 Current index:", current_hat_index)
+	print("======================================")
+	current_hat_index = max(0, current_hat_index - 1)
+	webcam_client.previous_hat()
+	_update_hat_label()
+
+func _on_next_hat_pressed():
+	"""
+	Handle next hat button
+	"""
+	print("======================================")
+	print("🔴 BUTTON CLICKED: Next Hat")
+	print("🔴 Current index:", current_hat_index)
+	print("======================================")
+	current_hat_index += 1
+	webcam_client.next_hat()
+	_update_hat_label()
+
+func _update_hat_label():
+	"""
+	Update hat display label
+	"""
+	hat_info_label.text = "Hat: %d" % (current_hat_index + 1)
